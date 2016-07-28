@@ -1,0 +1,92 @@
+
+#container{
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	min-width: 800px;	
+	margin: 0;
+	align-content: center;
+	margin: 10px;
+}
+#container ->div{
+	height: 100%;
+	display: flex
+}
+
+.flexContainer{
+	display: -webkit-box;
+	display: -webkit-flex;
+	display: -moz-box;
+	display: -ms-flexbox;
+	display: flex;
+}
+
+.flexContainer ->div{
+	-webkit-box-flex: 1;
+	-webkit-flex: 1;
+	-moz-box-flex: 1;
+	-ms-flex: 1;
+	flex: 1;
+	display: -webkit-box;
+	display: -webkit-flex;
+	display: -moz-box;
+	display: -ms-flexbox;
+	display: flex;
+	
+}
+.hFlex{
+	-webkit-box-orient: horizontal;
+  	-webkit-box-direction: normal;
+	-webkit-flex-direction: row;
+	-moz-box-orient: horizontal;
+	-moz-box-direction: row;
+	-ms-flex-direction: column;
+	flex-direction:row;
+	width: 100%;
+}
+
+.hTableContainer{
+	display: table;
+}
+.hTableContainer ->div{
+	display:table-cell;
+	height: 100%;
+}
+
+.verticalFlex{
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	-webkit-flex-direction: column;
+	-moz-box-orient: vertical;
+	-moz-box-direction: normal;
+	-ms-flex-direction: column;
+	flex-direction: column;
+	flex-wrap: nowrap;	
+}
+.verticalFlex ->div{
+	-webkit-box-pack: center;
+	-webkit-justify-content: center;
+	-moz-box-pack: center;
+	-ms-flex-pack: center;
+	justify-content: center;
+	-webkit-box-orient: vertical;
+	-webkit-box-direction: normal;
+	-webkit-flex-direction: column;
+	-moz-box-orient: vertical;
+	-moz-box-direction: normal;
+	-ms-flex-direction: column;
+	flex-direction: column;
+	width: 100%;
+	overflow-y: auto
+}
+
+.fillRest{
+	flex: 1
+	-webkit-box-flex: 1;
+	-webkit-flex: 1;
+	-moz-box-flex: 1;
+	-ms-flex: 1;
+	overflow: auto;
+}

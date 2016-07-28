@@ -1,0 +1,154 @@
+ul{
+	list-style: none;
+}
+.title{
+	
+}
+.url{
+	color: green;
+	font-size: small;
+}
+.activeTab{
+	background-color: #6cf;
+}
+
+#modal_background{
+	z-index: 100;
+	background: rgba(0,0,0,0.5);
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	align-items: center;
+	display: none;
+}
+#modal_window{
+	position: absolute;
+	margin: auto;
+	left: 30%;
+	width:  40%;
+	height: 100px;
+	background: rgba(255,255,255,0.9);
+	box-shadow: 1px, 1px, 1px, 5px, 5px, black;
+}
+
+#searchArea{
+	width: 40%;
+	min-width: 400px;
+	max-width: 800px;
+	margin-left: 50px;
+	margin-right: 20px;
+}
+
+#uncolored_intents{
+	list-style-type:none;
+	padding: 0;
+	margin: 0;
+}
+#uncolored_intents li{
+	margin-top: 10px;
+	background: rgba(255,255,255,0.9);	
+	border: 1px solid rgba(100,100,100,0.1);
+}
+#intentListPanel{
+	width: 300px;
+	background-color:rgba(100,100,100,0.1);
+	height: 100%;
+	padding: 1;
+	margin-right: 0px;
+}
+#intentListPanel div{
+	margin: 1;
+	padding: 0;
+}
+
+.negativeFeedback{
+	padding: 5px;
+	margin: 5px;
+}
+.positiveFeedback{
+	padding: 5px;
+	margin: 5px;
+}
+#detailTimeline{
+	width: 250px;
+		margin-left: 0px;
+
+	
+}
+#detailTimeline>ul Button{
+	width: 100%;
+	text-align: left;
+	background: none;
+	border: none;
+}
+#detailTimeline ul{
+	list-style: none;
+	margin-left: 0px;
+	padding-left: 1px;
+	text-align: left;
+	border-left: 1px solid rgba(119,119,119,0.3); /*same as brush*/
+
+}
+#detailTimeline li{
+	margin-left: 0px;
+	padding-left: 5px;
+}
+.pdficon{
+	font-size: 6pt;
+	border-radius: 3px;
+	background-color: firebrick;
+	color: white;
+}
+.folded{
+	font
+}
+button{
+	border: none;
+	background: none;
+}
+.searchbox{
+	border: 2px solid #adf;
+	line-height: 40px;
+	font-size: large;
+}
+
+.popover{
+	background: rgba(150,150,150,0.8);
+	border: 1px solid #aaa;
+	color: white;
+}
+.title{
+	border-bottom: 1px solid #eee;
+	margin-bottom: 5px;
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.axis text {
+  font: 10px sans-serif;
+}
+.brush .extent {
+  fill-opacity: 0.1;
+  shape-rendering: crispEdges;
+}
+
+#intentPanel{
+	width: 300px;
+}
+
+
+
+.placeHolder{
+	width: 100%;
+	height: 100%;
+	vertical-align: middle;
+	text-align:center;
+	opacity: 0.5;
+}

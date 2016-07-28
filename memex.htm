@@ -1,0 +1,40 @@
+	
+<div id="intentPanel" ng-controller="intentListController" class="flexContainer verticalFlex" >
+	<div class="panelHeader">Your past topics <button ng-click="getIntent()">refresh</button>
+	</div>
+	<span>{{alertMessage}}</span>
+	<div class="fillRest" >
+		<ul>
+			<li ng-repeat="intenti in intents" ng-controller="intentController" ng-init="initCtrl(intenti)">
+				<div style="{{backgroundCode}}{{borderCode}}">
+				<button tag-button ng-repeat="item in facets" ng-controller="intentElementController" style="{{getStyle(item.weight)}}" popover-item popover-content={{popoverContent(item)}} >{{getContent(item,20)}} </button>
+				</div>
+				<div><button ng-click="setTempColor()">Highlight</button></div>
+			</li>
+		</ul>
+	</div>
+</div>
+
+<div ng-controller="timelineController" id="overviewTimeline">
+  
+	<timeline-plot data="myData" fill-scheme="intentColors" stroke-scheme="tempColors"></timeline-plot>
+	
+</div>
+
+<div id="detailTimeline" ng-controller="eventListController" class="flexContainer verticalFlex">
+	<div >end:{{timeRange.start}}</div>
+	<div class="fillRest">
+		<div ng-hide="dataLoaded" class="placeHolder">No events loaded</div>
+		<ul >
+			<li><button>Later Events</button></li>
+			<li ng-repeat="eventi in events" ng-mouseenter="applyFishEye($index)" ng-mouseleave="removeFishEye($index)"  zoomable-li data="eventi">
+				<div ng-controller="eventItemController">
+				<div class="eventIcon" ng-include></div>
+				<button popover-item popover-content="event">{{eventi.title}}</button>
+				</div>
+			</li>
+			<li><button>Earlier Events</button></li>
+		</ul>
+	</div>
+	<div >start:{{timeRange.end}}</div>
+</div>

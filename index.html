@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+		<script src="bootstrap/js/bootstrap.min.js"></script>
+		<link href="css/layout.css" rel="stylesheet" type="text/css">
+		<link href="css/style1.css" rel="stylesheet" type="text/css">
+		<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" >
+		<style>
+			.popover.right>.arrow:after{
+				border-right-color:#aaa;
+			}
+		</style>
+	</head>
+	<body>
+		<div  id="container" class="flexContainer hFlex" >
+			
+			<div id="searchArea" ng-app="exploratorySearch" ng-controller="searchController" >
+				<div ng-include="'search.htm'"></div>
+			</div>
+			
+			<div ng-app="memex" class="flexContainer hFlex" ng-include="'memex.htm'">	
+			</div>	
+		</div>		
+		
+			
+		
+		<div id="modal_background">
+			<div id="modal_window"></div>
+		</div>
+		
+		<script src="js/angular.js"></script>
+		<script src="js/searchModule.js"></script>
+		<script src="js/memexModule.js"></script>
+		<script src="js/factories.js"></script>
+		 <script src="js/d3.min.js"></script>
+		<script src="js/timeline.js"></script>
+		<script>
+		  angular.bootstrap(angular.element(document), ['exploratorySearch','memex']);
+		</script>
+	</body>
+		
+</html>

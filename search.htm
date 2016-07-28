@@ -1,0 +1,49 @@
+<!--main search area -->
+<div>
+	<form>
+		<input type="search" ng-model="query" placeholder="Enter your query here">
+		<button ng-click="search('query')" class="btn btn-info btn-lg">
+		<span class="glyphicon glyphicon-search"></span> Search</button>
+	</form>
+</div>
+<div ng-controller="TabController">
+
+	<div>
+		<button ng-click="setTab(0)" ng-class="{activeTab : active==0}">Bookmarks</button>
+		<button ng-click="setTab(1)" ng-class="{activeTab : active==1}">Keywords</button>
+		<button ng-click="setTab(-1)" ng-hide="active==-1">Hide</button>
+	</div>
+
+	<div ng-show="active==0" ng-controller="bookmarksController">
+		<h2>bookmarks</h2>
+		<ul>
+			<li ng-repeat="item in items" ng-controller="bookmarkItemController"  >
+				<div><button ng-click="removeItem(item)">Remove </button><span class="title">{{item.title}}</span></div>
+				<div class="url">{{item.uri}}</div>
+			</li>
+		</ul>
+	</div>
+	<div ng-show="active==1">
+		<h3>Current Intent</h3>
+	</div>
+
+</div>
+
+<div>
+<p>page {{currentPage}} </p>
+	<label><input type="radio"  value="both" ng-model="result_type">Both </label>
+	<label><input type="radio" ng-model="result_type" value="new">New resuts only</label>
+	<label><input type="radio" ng-model="result_type" value="old">Local results only</label>
+</div>
+
+<div class="fillRest"  >
+
+	<button  ng-click="previousPage()" ng-hide="bof()">Previous page</button>
+	<ul>
+		<li ng-repeat="result in results" ng-controller="resultItemController" >
+			<div ><input type="checkbox" ng-init="checkBookmark(result)" ng-model="bookmark" ng-change="toggleBookmark(result)" ng-mouseenter="checkBookmark(result)"><span class="title">{{result.title}}</span></div>
+			<div class="url">{{result.uri}}</div>
+		</li>
+	</ul>
+	<button  ng-click="nextPage()" ng-hide="eof">next page</button>
+</div>
