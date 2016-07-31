@@ -2,19 +2,22 @@ mapp.factory('memexData', function($http){
 	//now: create the factory
 	var dummyFactory={};
 	
-	dummyFactory.events=[];
+	dummyFactory.oEvents=[];
+	dummyFactory.dEvents=[];
 	dummyFactory.intents=[];
-	dummyFactory.coloredFolders=[];//colors are assigned through manger app, usually fetched from server database.
+	dummyFactory.coloredItems=[];//[{"id":documentid, "tag":tag text,"type": tag/document}]
 	dummyFactory.coloredIntents=[];//colors are temporally assigned, not stored in databse.
 	dummyFactory.getData=function(url){
 		return $http.get(url)};
 	dummyFactory.info="";
-	dummyFactory.ftimeRange={start:'',end:''};//selected time range
+	dummyFactory.focusedTimeRange={start:new Date(),end:new Date()};//selected time range
+	dummyFactory.endTime=new Date();
+	dummyFactory.beginTime=new Date();//will be changed after initial fetch
 	/////////some constances
 	
-	var intentColors=["#e41a1c","#377eb8","#4daf4a"];//for temporally use during the tasks only
-    //assigned to intents through the intent manger app
-	var folderColors=[
+	var itemColors=["#e41a1c","#377eb8","#4daf4a"];//for selected documents or tags
+    
+	var intentColors=[//for intent 
 	"#a6cee3",
 	"#b2df8a",
 	"#fb9a99",
@@ -23,18 +26,135 @@ mapp.factory('memexData', function($http){
 	"#cab2d6",
 	"#6a3d9a"];
 	
-	dummyFactory.tempColors=intentColors;
-	dummyFactory.fixColors=folderColors;
+	dummyFactory.intentColors=intentColors;
+	dummyFactory.itemColors=itemColors;
 	
 	var  Math=window.Math;
 	//some private variables  and functions
+	
 	var keywords = [];
+	
+	var database={};//pretend this is the database where the events and intents are stored
+	
+	dummyFactory.initiateData=function(){
+		$http.get("data.txt").success(
+			function(rawData){
+				database=createDummyDataSet(rawData);//should be removed when backend is ready
+				//then get the following data:
+				dummyFactory.beginTime=database.start;
+				dummyFactory.endTime=database.endTime;
+			
+				//get a subset of the full intents list
+				//when real backend is ready, the following should be replaced with:dummyFactory.intents=database.intents
+				dummyFactory.intents=database.intents.slice(0,Math.min(15,database.intents.length));
+				
+				dummyFactory.fetchTimelineEvents();
+				
+				
+				var coloredInt=database.coloredIntents;
+				//intiate coloredIntents.
+				for (var i=0;i<intentColors.length;i++){
+					dummyFactory.coloredIntents[i]=-1;
+				}
+				//fill in the coloured intents if PIM tool is used to assign colors to intents
+				for (var i=0;i<coloredInt.length;i++){
+					var ci=intentColors.indexOf(coloredInt[i].colorCode);
+					if(ci>0)dummyFactory.coloredIntents[ci]=coloredInt[i].intentId;
+				}
+				
+			}
+		);
 		
-	dummyFactory.initiateData=function (rawData){	
-		var  intents=[];
+		
+	}
+	
+	dummyFactory.fetchIntents=function(){
+		//TODO: this function should be re-written after real backend is ready . 
+		//the code below generate a re-ranked list of intents
+		if (database["intents"]){
+		for (var i=0;i<database.intents.length;i++){
+			database.intents[i].weight=Math.random();
+			database.intents.sort(function(a, b){return b.weight-a.weight});
+		}
+		dummyFactory.intents=database.intents.slice(0,Math.min(15,database.intents.length));
+		}
+	}
+	dummyFactory.fetchTimelineEvents=function(criteria){
+		//TODO: this function fetches events for timeline circles, then update the weight of events on detailed timeline
+		//new events fetched ....
+		//temporary code below select 30 items with heighted weight:
+		if (database["events"]){
+		var el=database.events;
+		el.sort(function(a,b){return (b.weight+b.relevance+Math.random())-(a.weight+a.relevance+Math.random())});
+		dummyFactory.oEvents=el.slice(0,Math.min(30,el.length));
+		}
+	}
+	dummyFactory.fetchEvents=function(){
+		//fetch events according to selected time range
+		//otherwise, by default,get the 
+		//temporary code below get the top 50 events 
+		if (database["events"]){
+		var el=database.events;
+		el=el.filter(function(e){return e.start>=dummyFactory.focusedTimeRange.start && e.start<=dummyFactory.focusedTimeRange.end});
+		dummyFactory.dEvents=el.sort(function(a,b){return b.start-a.start});
+		}
+	}
+	
+	dummyFactory.setTempColor=function(intentid){
+		//var doUpdate=true;
+		var border="";//by default, if no color is available to assign to it 
+		var i=dummyFactory.coloredIntents.indexOf(intentid);
+		if(i<0){
+			//intent does not have a temp color, then apply color		
+		// check if there are still color code left, assign it a color code
+			if (dummyFactory.coloredIntents.indexOf(-1)<0){
+				if (dummyFactory.coloredIntents.length<intentColors.length){
+					//register it in coloredIntents list
+					dummyFactory.coloredIntents.push(intentid);
+					border=intentColors[dummyFactory.coloredIntents.length-1];
+				}
+				else{
+					//border="";
+					dummyFactory.info="You can only select up to "+intentColors.length+" intents";
+				}
+			}
+			else{//find an space where an intent has been removed from coloredIntents array
+				var blankIndex=dummyFactory.coloredIntents.indexOf(-1);
+				//register it in coloredIntents list
+				dummyFactory.coloredIntents[blankIndex]=obj.intentid;
+				border=intentColors[blankIndex];
+			}
+			
+		}
+		else{
+			//remove intentid from the coloredIntets list
+			dummyFactory.coloredIntents[i]=-1;//assign an invalid id to hold the place
+			//border="";
+		}	
+		return border;
+	}
+	dummyFactory.getIntentColor=function(intentid){
+		if (dummyFactory.intentColors.indexOf(intentid)<0){
+			return "";
+		}
+		else{
+			return itemColors[dummyFactory.intentColors.indexOf(intentid)];
+		}
+	}
+	
+
+	
+	
+	//////////////the following functions are only for creating a fake dataset///////////////
+	function createDummyDataSet(rawData){
+		//1. this dummy function creats a "fake" database, which contain intents and events, as wells as pre-stored color codes for some intents
+		
+		var intents=[];
 		var  timelineEvents=[];
 		var  intentids=[];	
 		var  colored_Folder=[];
+		var  beginDate=new Date();
+		var  endDate=new Date("2011-01-01");
 		keywords = [];
 
 		$(rawData).each(function(){
@@ -45,6 +165,13 @@ mapp.factory('memexData', function($http){
 			var intentid=Math.round(Math.random()*20);
 			obj.intent=intentid;
 			obj.start=this.start;
+			//compare with earliest date
+			if(obj.start<beginDate){
+				beginDate=obj.start;
+			}
+			if(obj.start>endDate){
+				endDate=obj.start;
+			}
 			timelineEvents.push(obj);
 
 			//now, push it to intent
@@ -73,15 +200,20 @@ mapp.factory('memexData', function($http){
 				intents[intentids.indexOf(intentid)]=dummydocs(this, intenti);
 				}
 			});
-		dummyFactory.events=timelineEvents;
-		dummyFactory.intents=intents;
 		
-		//assign colors, assign the colours to intent 1-n
-		//in real system, the colores are assigned via the manger app.
-		for (var i=0; i<folderColors.length;i++){
-			colored_Folder.push(i);
+		//mimick: some intents has been assigned with color code through PIM app.
+		for (var i=0; i<Math.min(2,intentColors.length);i++){
+			intents[i]["colorCode"]=intentColors[i];
+			colored_Folder.push({intentId:i, colorCode:intentColors[i]});
 		}
-		dummyFactory.coloredFolders=colored_Folder;
+		
+		return {
+			intents:intents,
+			events:timelineEvents,
+			start:beginDate,
+			endTime:endDate,
+			coloredIntents:colored_Folder
+		};
 	}
 
 	function dummytags(cevent, intenti){
@@ -164,49 +296,6 @@ mapp.factory('memexData', function($http){
 		}
 		return index;
 	}
-	
-	dummyFactory.setTempColor=function(intentid){
-		//var doUpdate=true;
-		var border="";//by default, if no color is available to assign to it 
-		var i=dummyFactory.coloredIntents.indexOf(intentid);
-		if(i<0){
-			//intent does not have a temp color, then apply color		
-		// check if there are still color code left, assign it a color code
-			if (dummyFactory.coloredIntents.indexOf(-1)<0){
-				if (dummyFactory.coloredIntents.length<intentColors.length){
-					//register it in coloredIntents list
-					dummyFactory.coloredIntents.push(intentid);
-					border=intentColors[dummyFactory.coloredIntents.length-1];
-				}
-				else{
-					//border="";
-					dummyFactory.info="You can only select up to "+intentColors.length+" intents";
-				}
-			}
-			else{//find an space where an intent has been removed from coloredIntents array
-				var blankIndex=dummyFactory.coloredIntents.indexOf(-1);
-				//register it in coloredIntents list
-				dummyFactory.coloredIntents[blankIndex]=obj.intentid;
-				border=intentColors[blankIndex];
-			}
-			
-		}
-		else{
-			//remove intentid from the coloredIntets list
-			dummyFactory.coloredIntents[i]=-1;//assign an invalid id to hold the place
-			//border="";
-		}	
-		return border;
-	}
-	dummyFactory.getIntentColor=function(intentid){
-		if (dummyFactory.coloredFolders.indexOf(intentid)<0){
-			return "";
-		}
-		else{
-			return folderColors[dummyFactory.coloredFolders.indexOf(intentid)];
-		}
-	}
-	
 	return dummyFactory;
 });
 

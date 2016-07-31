@@ -3,9 +3,11 @@ mapp.directive('timelinePlot', function ($window) {
     var directiveDefinitionObject = {
         restrict: 'E',
         replace: false,
-        scope: { data: '=data', fillColors:'=fillScheme', strokeColors:'=strokeScheme' },
+        scope: { data: '=data', fillColors:'=fillScheme', strokeColors:'=strokeScheme', timelineRange:'=timelineRange', selectedRange:'=brushRange' },
 		template:"<svg></svg>",
-        link: function (scope, element, attrs) {
+        link: function (scope, element, attrs, ctrl) {
+			
+			var brushRange=[];//changed on brush"end" event, to solve the update loop problem caused by transition delay 
 			///some constance:
 			var default_color="#333";
 			var margin = {
@@ -15,6 +17,7 @@ mapp.directive('timelinePlot', function ($window) {
 				left: 80
 			};
 			var	width = 150;
+			
 			
 		scope.height = $window.innerHeight;//el.clientHeight;
 			
@@ -54,7 +57,11 @@ mapp.directive('timelinePlot', function ($window) {
 		
 			
 		//resize: resize entire oTimeline, y will be change due to range change, thus all points will be positioned
-		function resize(){
+		function clearbrush(){
+			 d3.selectAll(".brush").call(brush.clear());
+			 scope.selectedRange=null;
+		}
+			function resize(){
 			svg.attr('height', scope.height);
 			//oTimeline.attr('height', scope.height);
       		y.rangeRound([scope.height - margin.top - margin.bottom, 0]);
@@ -63,6 +70,22 @@ mapp.directive('timelinePlot', function ($window) {
 			//oTimeline.$digest();
 		}	
 		
+		function rescale(){
+			//when user zooms in or out, the y domain will change	
+			if(scope.timelineRange){
+				beginDate=scope.timelineRange[0];
+				endDate=scope.timelineRange[1];
+				extendRange_hours=Math.round((endDate-beginDate)/36000000);//extend 10%
+				
+				beginDate=d3.timeHour.offset(beginDate, -extendRange_hours);
+				endDate=d3.timeHour.offset(endDate,extendRange_hours);
+				
+				y.domain([beginDate, endDate]);
+			
+				redraw();
+			}
+		}	
+			
 		function redraw(){
 		//this functions is only called when the entire dataset changes
 			var dataset=scope.data;
@@ -75,7 +98,7 @@ mapp.directive('timelinePlot', function ($window) {
 				})])
 				.range([10, 10+width - margin.right - margin.left]);
 				
-				//update y scale
+			/*	//update y scale
 				
 				beginDate=d3.min(dataset, function (d) {
 					return new Date(d.start);
@@ -88,7 +111,7 @@ mapp.directive('timelinePlot', function ($window) {
 				beginDate=d3.timeHour.offset(beginDate, -extendRange_hours);
 				endDate=d3.timeHour.offset(endDate,extendRange_hours);
 				
-				y.domain([beginDate, endDate]);
+				y.domain([beginDate, endDate]);*/
 				
 				
 				
@@ -145,6 +168,8 @@ mapp.directive('timelinePlot', function ($window) {
 			y_axis.call(yAxis);
 			//initiate the fill colors
 			updateFillColor();
+			//clear brush
+			//d3.select(this).transition().call(brush.move,[0,0]);
 		}
 		
 		////onChanges to relevance of points
@@ -194,16 +219,27 @@ mapp.directive('timelinePlot', function ($window) {
 		
 
 		function brushend(){
-			if(scope.data&&scope.data.length>0){
-				var defaultDateOffset=5;
-				//only do this if this function is not call programmically
 				if (d3.event.sourceEvent){
-					var cdate = y.invert(d3.mouse(this)[1]);
-					//temporally define brush range
-					var value_end = d3.timeDay.offset(cdate,defaultDateOffset);
-					var value_start =d3.timeDay.offset(cdate,-defaultDateOffset);
-					//var value_end = y.invert(d3.event.selection[0]);
-					//var value_start =y.invert(d3.event.selection[1]);
+					var value_end= y.invert(0);
+					var	value_start=y.invert(0);
+					if(d3.event.selection){
+						value_end=y.invert(d3.event.selection[0]);
+						value_start=y.invert(d3.event.selection[1]);
+					}
+					else{
+						//if single click instead of draw a range
+						var defaultDateOffset=5;
+						var cdate = y.invert(d3.mouse(this)[1]);
+						//temporally define brush range
+						var value_end = d3.timeDay.offset(cdate,defaultDateOffset);
+						var value_start =d3.timeDay.offset(cdate,-defaultDateOffset);
+						updateBrush(value_start, value_end);
+					}
+				
+					
+					
+					if(scope.data&&scope.data.length>0){
+				
 				//highligh selected area
 					d3.selectAll("circle").style("opacity", function(d) {
 						var eventDate=new Date(d.start);
@@ -214,19 +250,22 @@ mapp.directive('timelinePlot', function ($window) {
 						var eventDate=new Date(d.start);
 						// Fade all events not within the brush
 						return (eventDate >= value_start && eventDate < value_end) ? 1 : 0.5;
-					});
-					d3.select(this).transition().call(brush.move,[Math.max(0,y(value_end)),Math.min(y(value_start),scope.height-margin.top-margin.bottom)]);
+					});			
+					}
+					//update selectedRange in controller
+					scope.selectedRange[0]=value_start;
+					scope.selectedRange[1]=value_end;
+					ctrl.setBrushRange(scope.selectedRange);
 				}
-				}
-			}
 			
 			
-		scope.adjust_brush=function(value0, value1){
-			//adjust brush size accoding to time range of events presented
-				brush.extent([value0, value1]);
-				brush(d3.select(".brush").transition());
-				brush.event(d3.select(".brush").transition().delay(1000));
-			}
+		}
+		
+			
+		function updateBrush(value_start, value_end){
+			//d3.select(this).transition().call(brush.move,[Math.max(0,y(value_end)),Math.min(y(value_start),scope.height-margin.top-margin.bottom)]);		
+		}	
+		
 		//when data changes, redraw entire timeline
 		scope.$watch('data',redraw);
 		
@@ -237,9 +276,26 @@ mapp.directive('timelinePlot', function ($window) {
           };
 		///when intent color scheme changes
 			
-		scope.$watch('strokeColors',updateStrokeColor);
-		scope.$watch('fillColors',updateFillColor);
-		
+		//scope.$watchCollection('strokeColors',updateStrokeColor);
+		//scope.$watchCollection('fillColors',updateFillColor);
+		///watch selection of brush range changes made by other elements, e.g event list
+		scope.$watchCollection(scope.selectedRange,function(){
+			//need to check with this is caused by move brush, or programelly from controller
+			if(scope.selectedRange){
+				if(scope.selectedRange.length==2){
+					updateBrush(scope.selectedRange[0], scope.selectedRange[1]);
+				}
+			}
+		});
+			//happends after zoom
+		scope.$watchCollection(
+			function(){
+				//console.log(scope.timelineRange);
+				return scope.timelineRange
+			},
+			
+			rescale);
+			
 
      }};
 		

@@ -16,18 +16,104 @@ mapp.value("folderColors",[
 
 
 mapp.controller('timelineController',['$scope','memexData',function($scope,memexData) {
-    $scope.myData =[];
+    $scope.events =[];
 	//list of color schemes: {intentid:id, color:color: styleKey:"border" or "background"}
+	
 	$scope.intentColors=[];
-	$scope.tempColors=[];
+	$scope.itemColors=[];
+	$scope.zoomLabel="in";
+	$scope.EnableZoomeIn=false;
+	$scope.EnableZoomeOut=false;
+	$scope.brushRange=[];
+	$scope.zoomRange=[];
+	
+	
+	var initDate=(new Date()).getTime();
+	$scope.brushRange=[initDate,initDate];//only changed through timeline directive
+	$scope.timelineRange=[initDate,initDate];
+	$scope.zoomRange1=[initDate,initDate];
+
+	//function called through other UI components programmly.	
+	$scope.setBrushRange=function(newRange){
+		
+		if (newRange!=null&&(newRange[1]>newRange[0])){
+			$scope.brushRange=newRange;
+			//if newRange<zoom range
+			checkZoomable();
+		}
+	}
+	
+	//function called when brush range is changed from timeline brush action
+	$scope.$watchCollection($scope.brushRange,function(){
+		console.log($scope.brushRange);
+		if($scope.brushRange!=null&&$scope.brushRange.length==2){
+			checkZoomable();
+			//update the brush range in factory, so that event list can be updated
+			memexData.focusedTimeRange.start=$scope.brushRange[0];
+			memexData.focusedTimeRange.end=$scope.brushRange[1];
+			memexData.fetchEvents();//will update the event list 
+		}
+	});
+
+	function checkZoomable(){	
+		if((($scope.brushRange[1]-$scope.brushRange[0])>0)&&(($scope.brushRange[1]-$scope.brushRange[0])<($scope.zoomRange[1]-$scope.zoomRange[0]))){
+				//can still zoom in
+			$scope.EnableZoomeIn=true;
+			}
+		else{
+			$scope.EnableZoomeIn=false;
+		}
+	}
+	
+	
+	$scope.zoomin=function(){zoom(true)};
+	$scope.zoomout=function(){zoom(false)};
+	function zoom(zoomin){
+		if(!zoomin){
+			//zoom out
+			$scope.zoomRange[0]=$scope.timelineRange[0];
+			$scope.zoomRange[1]=$scope.timelineRange[1];
+			$scope.EnableZoomeOut=false;
+		}
+		else{
+			//zoom in
+			$scope.zoomRange[0]=$scope.brushRange[0];
+			$scope.zoomRange[1]=$scope.brushRange[1];
+			$scope.EnableZoomeOut=true;
+			$scope.EnableZoomeIn=false;
+		}
+		//then update event
+		var events_in_range=memexData.oEvents.filter(function(e){
+			return e.start>=$scope.zoomRange[0]&&e.start<=$scope.zoomRange[1]
+		})
+		$scope.events=events_in_range;//then it will trigger update to timeline 
+	}
+	
+	$scope.clearTimeline=function(){
+		memexData.oEvents=[];//will trigger re-draw function, in which all circles will be removed, brush will be cleared un re-draw.
+	}
 	//when data changes
-	$scope.$watch(function(){return memexData.events},
+	$scope.$watch(function(){return memexData.oEvents},
 				  function(){
-		if (memexData.events.length>0)
-			$scope.myData=memexData.events;
+		if (memexData.oEvents.length>0)
+			$scope.events=memexData.oEvents;
 		}
 	)
+	
+	$scope.$watch(
+		function(){return memexData.beginTime},
+		function(){
+			
+			$scope.timelineRange[0]=memexData.beginTime;
+			$scope.timelineRange[1]=memexData.endTime;
+			//change zoom range, so that it will shows the max range
+			$scope.zoomRange[0]=memexData.beginTime;
+			$scope.zoomRange[1]=memexData.endTime;
+			$scope.EnableZoomeOut=false;
+
+		})
 	//when color scheme in memexData factory changes, 
+	/*
 	$scope.$watchCollection(
 		function(){
 			return memexData.coloredFolders;
@@ -62,9 +148,9 @@ mapp.controller('timelineController',['$scope','memexData',function($scope,memex
 			$scope.tempColors=newarr;
 		}
 	);
+	*/
 	
-	
-	//what window resize, the svg will resize accordingly
+	//when window resize, the svg will resize accordingly
 	angular.element(this).on('resize', function(){ $scope.$apply() })
 }]);
 
@@ -73,16 +159,22 @@ mapp.controller("intentListController", ['$scope','memexData',function($scope,me
 	//controller historical intent list
 	$scope.intents=[];
 	$scope.alertMessage="";
-	$scope.getIntent=function(){
-		
-		memexData.getData("data.txt").then(function(response){
-			memexData.initiateData(response.data);
-			$scope.intents=memexData.intents;
-			
-		}, function(response){console.log(response)});
-			
+	
+	$scope.getIntent=function(){	
+	memexData.initiateData();
 	}
+	$scope.updateIntent=function(){	
+	memexData.fetchEvents();
+	}
+	$scope.$watchCollection(
+		function(){		
+			return memexData.intents;
+		},
+		function(){
+			$scope.intents=memexData.intents;
+	})
 	$scope.$watch(function(){return memexData.info},function(){$scope.alertMessage=memexData.info;})
+	
 }]);
 
 //controls a single li
@@ -145,7 +237,6 @@ mapp.controller("intentController", ['$scope','memexData',  function($scope, mem
 		var docs=$scope.intent.docs.slice(0,Math.min($scope.intent.docs.length,number_docs));
 		
 		var items= terms.concat(docs);
-		//console.log(items);
 		return items;
 		
 	}
@@ -219,13 +310,10 @@ mapp.directive("popoverItem", function(){
 mapp.controller("eventListController",['$scope','memexData',function($scope,memexData){
 	var maxEventPerPage=50;//need to tune this
 	$scope.events=[];
-	$scope.eventsInRange=[];
 	$scope.timeRange={start:'yestoday', end:'today'};
 	$scope.dataLoaded=false;
 	$scope.colorScheme=[];
-	$scope.updateTimeRange=function(){
-		console.log("event");
-	}
+	
 	
 	//"fisheye"
 	var fishEyeRange=10;//=number of items around the target that will 
@@ -245,13 +333,13 @@ mapp.controller("eventListController",['$scope','memexData',function($scope,meme
 	function fishEyeWeight(distance_from_target){
 		return Math.ceil(fishEyeRange/(1+distance_from_target));//1+5*Math.exp(-Math.pow(distance_from_target,2));
 	}
-	$scope.$watch(function(){return memexData.events},function(){
-		$scope.events=memexData.events;
-		if ($scope.events.length>0) $scope.dataLoaded=true;
+	$scope.$watch(function(){return memexData.dEvents},function(){
+		$scope.events=memexData.dEvents;
+		if ($scope.events.length>0){
+			$scope.dataLoaded=true;
+		} 		
 	});
-	$scope.$watch(memexData.timeRange,function(){
-		//$scope.timeRange={start:memexData.timeRange.start, end:memexData.timeRange.end};
-	});
+	
 	$scope.$watchCollection(memexData.coloredIntents,function(){
 		
 	});

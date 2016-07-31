@@ -1,0 +1,29 @@
+version1.0.2:
+
+1. sperate events for overview timeline and detail timeline. (but may need a function to combine their weights)
+
+	a. memexData.events --> oEvents and fEvents.
+
+
+2. add "clear" button to: 
+	a. clear all circles on overview timeline
+	b. clear brush and selected time range
+	c. clear events on detail timeline (hide detail timeline), but events can re-appear after brushing even on empty overview timeline.
+
+3. add "zoom to selected range" button to change the range of overview timeline, and "reset range"(same button) to recover its detault range. or they can be called zoomin(endabled only when brush.extent is not empty), zoom out.  
+	a.will need to change brushend function, so that when brush end, it will not automatically change its defined range. 
+	b.only automatically fit then range only single click?
+	c.when moving to the end, should evalute the selection, extend the timelien range is it is still within its max range (detaul full range).
+	
+
+4. Assign color code to each individual events, which will affect the colors of events on both overview timeline and eventlist
+	i) for events on detail timeline, multiple colour codes can be assigned, with opacity to dicate p(c|x);
+	ii) for events on overview timeline, each event can only have 1 fill color and 1 stroke color. 
+		a. When multiple intents are selected, the system should distinguish between currently foused intent, and other selected intents. 
+			 when each intent is selected, events will be download according to relevance to the intent, and sized according to relevance score. 
+			 For events that alread exist on the timeline (from previously selected intent), if their p(c|x) to a previous intent is much higher than its p(c|x) of focused intent (newly selected intent), p(c|x)-p(cf|x)>thresold, or p(cf|x)<another thresold, it should keep its old color. but all these colour codes and temporally selected intentid pairs will be added to the event object's "colorCode" array. 
+			 when and intent is removed from selection, system is iterate through all events to remove its corresponding color code. 
+		 b. when a document or tag is selected, events associated with this information element will be assigned with another attribute, e.g dcode
+
+5.add filter function to memex intents, events. Allow filter by selected terms, documents in intent presentation. 
+		

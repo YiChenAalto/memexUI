@@ -1,6 +1,7 @@
 	
-<div id="intentPanel" ng-controller="intentListController" class="flexContainer verticalFlex" >
-	<div class="panelHeader">Your past topics <button ng-click="getIntent()">refresh</button>
+<div id="intentPanel" ng-controller="intentListController" class="flexContainer verticalFlex"  ng-init="getIntent()">
+	<div class="panelHeader">Your past topics 
+		<button ng-click="updateIntent()">refresh</button>
 	</div>
 	<span>{{alertMessage}}</span>
 	<div class="fillRest" >
@@ -16,13 +17,15 @@
 </div>
 
 <div ng-controller="timelineController" id="overviewTimeline">
-  
-	<timeline-plot data="myData" fill-scheme="intentColors" stroke-scheme="tempColors"></timeline-plot>
+	<button ng-click="zoomin()" ng-show="EnableZoomIn"><span class="glyphicon glyphicon-zoom-in"> Zoom In</span></button>
+	<button ng-click="zoomout()" ng-show="EnableZoomOut"><span class="glyphicon glyphicon-zoom-out"> Zoom Out</span></button>
+	<button ng-click="clearTimeline()">clear</button>
+	<timeline-plot data="events" timeline-range="zoomRange" brush-range="brushRange" fill-scheme="intentColors" stroke-scheme="itemColors"></timeline-plot>
 	
 </div>
 
 <div id="detailTimeline" ng-controller="eventListController" class="flexContainer verticalFlex">
-	<div >end:{{timeRange.start}}</div>
+	<div >{{timeRange.end}}</div>
 	<div class="fillRest">
 		<div ng-hide="dataLoaded" class="placeHolder">No events loaded</div>
 		<ul >
@@ -36,5 +39,5 @@
 			<li><button>Earlier Events</button></li>
 		</ul>
 	</div>
-	<div >start:{{timeRange.end}}</div>
+	<div >{{timeRange.start}}</div>
 </div>
