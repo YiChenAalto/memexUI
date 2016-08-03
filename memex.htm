@@ -31,9 +31,9 @@
 	
 </div>
 
-<div id="detailTimeline" ng-controller="eventListController as eventlist" class="flexContainer verticalFlex">
+<div id="detailTimeline" ng-controller="eventListController" class="flexContainer verticalFlex">
 	<div><span class="labelText" style="border-bottom: 1px solid rgba(119,119,119,0.3)">{{timeRange.end}}</span></div>
-	<div class="fillRest" style="border-left: 1px solid rgba(119,119,119,0.3)" scroll-list>
+	<div class="fillRest" style="border-left: 1px solid rgba(119,119,119,0.3)" >
 		<div ng-hide="dataLoaded" class="vertical_center">No events loaded</div>
 		<ul ng-show="dataLoaded">
 <!--			<li><button class="labelText">Later Events</button></li>-->

@@ -191,6 +191,22 @@ mapp.directive('timelinePlot', function ($window) {
 			
 		}
 		////onChanges to relevance of points
+		function setFocusedEvent(focusedEvent){
+			oTimeline.selectAll('circle')
+			.data(focusedEvent)
+			.attr('r', function (d) {
+				var r=10;
+				if (!d.hasOwnProperty("focused"))
+					r=mapRadius(d);
+				return r;
+			})
+			.style('opacity',function(){
+				var op=1;
+				if (!d.hasOwnProperty("focused"))
+					op=mapOpacity(d);
+				return op;
+			});
+		}
 		function updateRelevance(selected_events){
 			oTimeline.selectAll('circle')
 			.data(selected_events)
@@ -279,7 +295,11 @@ mapp.directive('timelinePlot', function ($window) {
 		//scope.$watchCollection('strokeColors',updateStrokeColor);
 		//scope.$watchCollection(scope.coloredIntents,redraw);
 		///watch selection of brush range changes made by other elements, e.g event list
-		scope.$watchCollection(scope.brushRange,function(){
+		scope.$watch(
+			function(){
+				return scope.brushRange[1]-scope.brushRange[0];
+			},
+			function(){
 			if(scope.brushRange){
 				if(scope.brushRange.length==2){
 					updateBrush(scope.brushRange[0], scope.brushRange[1]);

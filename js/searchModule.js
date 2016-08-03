@@ -48,7 +48,7 @@ sapp.controller('searchController', ['$scope','searchEngine',function ($scope, s
 		searchEngine.getData("dummyResults.txt").success(function(data){
 			searchEngine.results=data.docs;
 			//console.log("search...")
-			console.log(data);
+			//console.log(data);
 		//get the first page
 			var vlist=searchEngine.visible_results(0,$scope.resultsPerPage);
 			$scope.results=vlist.items;
@@ -71,7 +71,7 @@ sapp.controller('intentViewController',function($scope){
 		
 		var x=Math.round(r*Math.cos(agl));
 		var y=Math.round(r*Math.sin(agl));
-		console.log("ang:"+agl+",x:"+x+",y:"+y);
+		//console.log("ang:"+agl+",x:"+x+",y:"+y);
 		$scope.x=x;
 		$scope.y=y;
 	}

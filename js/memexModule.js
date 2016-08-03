@@ -38,7 +38,7 @@ mapp.controller('timelineController',['$scope','memexData',function($scope,memex
 		memexData.focusedTimeRange.start=value_start;
 		memexData.focusedTimeRange.end=value_end;
 		memexData.fetchEvents();//will update the event list 
-		$scope.$apply();
+		//$scope.$apply();
 		
 	}
 	$scope.$watch(
@@ -122,7 +122,7 @@ mapp.controller('timelineController',['$scope','memexData',function($scope,memex
 		}
 		//memexData.focusedEventIndex=;
 		//then highlight the event, e.g. set class to it , then remove its class
-		$scope.$digest();
+		//$scope.$digest();
 		
 	}
 	//when data changes
@@ -337,7 +337,7 @@ mapp.controller("eventListController",['$scope','memexData',function($scope,meme
 	var maxEventPerPage=50;//need to tune this
 	var initTime=(new Date()).getTime();
 	$scope.events=[];
-	$scope.timeRange={start:initTime, end:initTime};
+	$scope.timeRange=memexData.focusedTimeRange;
 	$scope.dataLoaded=false;
 	$scope.colorScheme=[];
 	//$scope.selectTime=initTime;
@@ -378,6 +378,7 @@ mapp.controller("eventListController",['$scope','memexData',function($scope,meme
 	function fishEyeWeight(distance_from_target){
 		return Math.ceil(fishEyeRange/(1+distance_from_target));//1+5*Math.exp(-Math.pow(distance_from_target,2));
 	}
+	
 	$scope.$watch(function(){
 		return memexData.dEvents;
 	},function(){
