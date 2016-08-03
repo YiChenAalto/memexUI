@@ -315,7 +315,9 @@ mapp.factory('memexData', function($http){
 			if (database.events[eventindex].hasOwnProperty("focused")){
 				delete database.events[eventindex].focused;
 			}
+			else{
 			database.events[eventindex]["focused"]=true;
+			}
 		}
 	}
 	

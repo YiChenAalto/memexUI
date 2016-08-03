@@ -37,10 +37,10 @@
 		<div ng-hide="dataLoaded" class="vertical_center">No events loaded</div>
 		<ul ng-show="dataLoaded">
 <!--			<li><button class="labelText">Later Events</button></li>-->
-			<li ng-repeat="eventi in events" ng-mouseenter="applyFishEye($index)" ng-mouseleave="removeFishEye($index)"  zoomable-li data="eventi">
-				<div ng-controller="eventItemController" ng-init="initEvent(eventi)" ng-mouseenter="toggleToolTip(eventi)" ng-mouseleave="toggleToolTip(eventi)">
-					<button ng-repeat="intent in coloredIntents" style="{{getIntentIconStyle(intent)}}"></button>
-					<button popover-item popover-content="<div class='.placeHolder'>Loading event details...</div>">{{eventi.title}}</button><div class="eventIcon" ng-include></div>
+			<li ng-repeat="eventi in events" ng-mouseenter="applyFishEye($index);toggleToolTip(eventi)" ng-mouseleave="removeFishEye($index);toggleToolTip(eventi)"  zoomable-li data="eventi">
+				<div ng-controller="eventItemController" ng-init="data=eventi" ng-class="{'focusedElm':isFocused}">
+					<button ng-repeat="intent in data.coloredIntents" style="{{getIntentIconStyle(intent)}}"></button>
+					<button popover-item popover-content="<div class='.placeHolder'>Loading event details...</div>">{{eventi.title}}</button>
 				</div>
 			</li>
 <!--			<li><button class="labelText">Earlier Events</button></li>-->

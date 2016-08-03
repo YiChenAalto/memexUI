@@ -25,6 +25,7 @@ mapp.controller('timelineController',['$scope','memexData',function($scope,memex
 		//if newRange<zoom range
 		checkZoomable();
 		
+		
 	}
 	
 	//function called when brush range is changed from timeline brush action
@@ -119,9 +120,9 @@ mapp.controller('timelineController',['$scope','memexData',function($scope,memex
 		else{
 			// don't updateEvents
 		}
-		memexData.focusedEventIndex;
+		//memexData.focusedEventIndex=;
 		//then highlight the event, e.g. set class to it , then remove its class
-		$scope.$apply();
+		$scope.$digest();
 		
 	}
 	//when data changes
@@ -416,28 +417,25 @@ mapp.directive("scrollList", function () {
 });
 
 mapp.controller("eventItemController",function($scope){
-	$scope.coloredIntents=[];
+	
 	$scope.data={};//this is not changed after the eventi change, as the eventi change did not trigger anyupdate to $scope.data; so this should be moved to a directive?
-	$scope.initEvent=function(obj){
-		$scope.coloredIntents=obj.coloredIntents;
-		$scope.data=obj;
-	}
+	
 	$scope.getIntentIconStyle=function(intent){
 		var h=intent["r"]*100;
 		h="height:"+h+"%;";
 		var bcolor="background-color:"+intent["color"]+";";
 		return h+bcolor;
 	}
-	$scope.style="unfocusedElm";
+	$scope.isFocused=false;
 	$scope.$watch(function(){
 		return($scope.data.hasOwnProperty("focused"));
 	},
 		function(){
 		if($scope.data.hasOwnProperty("focused")){
-			$scope.style="focusedElm";
+			$scope.isFocused=true;
 		}
 		else{
-			$scope.style="unfocusedElm";
+			$scope.isFocused=false;
 		}
 	})
 })

@@ -180,6 +180,4 @@ button{
 }
 .focusedElm{
 	background: rgba(200,0,0,0.3);
-	transform: scale(2);
-	z-index: 9;
 }
