@@ -267,7 +267,7 @@ mapp.directive('timelinePlot', function ($window) {
 						// Fade all events not within the brush
 						var op=0.05;
 						if(d.hasOwnProperty("intentColor"))op=0.3;
-						var hop=Math.min(1,op*4);
+						var hop=Math.min(1,op*10);
 						return (eventDate >= value_start && eventDate < value_end) ?  hop: op;
 					});
 						
@@ -295,7 +295,7 @@ mapp.directive('timelinePlot', function ($window) {
 		//scope.$watchCollection('strokeColors',updateStrokeColor);
 		//scope.$watchCollection(scope.coloredIntents,redraw);
 		///watch selection of brush range changes made by other elements, e.g event list
-		scope.$watch(
+		/*scope.$watch(
 			function(){
 				return scope.brushRange[1]-scope.brushRange[0];
 			},
@@ -305,7 +305,7 @@ mapp.directive('timelinePlot', function ($window) {
 					updateBrush(scope.brushRange[0], scope.brushRange[1]);
 				}
 			}
-		});
+		});*/
 			//happends after zoom
 		scope.$watchCollection(
 			function(){

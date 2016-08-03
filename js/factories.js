@@ -511,9 +511,23 @@ mapp.factory('memexData', function($http){
 
 sapp.factory('searchEngine',function($http){
 	var dummyFactory={};
-	dummyFactory.getData=function(url){
+	function getData(url){
 		return $http.get(url)};
 	dummyFactory.results=[];
+	dummyFactory.search=function(criteria){
+		getData("dummyResults.txt").then(
+			function(response){
+				//sucesse
+				dummyFactory.results=response.data.docs;
+	
+			
+			},
+			function(response){
+				//fail
+				window.console.log(response);
+			}
+		);
+	}
 	dummyFactory.visible_results=function(beginIndex,resultsPerpage){
 		//window.console.log(dummyFactory.results);
 		//return a copy of segment defined by beginIndex and endIndex

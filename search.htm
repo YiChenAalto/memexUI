@@ -1,60 +1,65 @@
 <!--main search area -->
-<div>
-	<form>
-		<input type="search" ng-model="query" placeholder="Enter your query here">
-		<button ng-click="search('query')" class="btn btn-info">
-		<span class="glyphicon glyphicon-search"></span></button>
-	</form>
-</div>
-<div ng-controller="TabController">
+<div ng-controller="searchController as searchCtrl" class="flexContainer verticalFlex">
+	<div>
+		<form>
+			<input type="search" ng-model="searchCtrl.query" placeholder="Enter your query here">
+			<button ng-click="searchCtrl.search('query')" class="btn btn-info">
+			<span class="glyphicon glyphicon-search"></span></button>
+		</form>
+	</div>
 
 	<div>
-		<button ng-click="setTab(0)" ng-class="{activeTab : active==0}">Bookmarks</button>
-		<button ng-click="setTab(1)" ng-class="{activeTab : active==1}">Keywords</button>
-		<button ng-click="setTab(-1)" ng-hide="active==-1">Hide</button>
+		<label><input type="radio"  value="both" ng-model="searchCtrl.result_type">Both </label>
+		<label><input type="radio" ng-model="searchCtrl.result_type" value="new">New resuts only</label>
+		<label><input type="radio" ng-model="searchCtrl.result_type" value="old">Local results only</label>
 	</div>
+	<div>{{searchCtrl.resultMessage}}</div>
+	<div class="fillRest"  >
 
-	<div ng-show="active==0" ng-controller="bookmarksController">
-		<h2>bookmarks</h2>
+
 		<ul>
-			<li ng-repeat="item in items" ng-controller="bookmarkItemController"  >
-				<div><button ng-click="removeItem(item)">Remove </button><span class="title">{{item.title}}</span></div>
-				<div class="url">{{item.uri}}</div>
+			<li ng-repeat="result in searchCtrl.results" ng-controller="resultItemController as resultCtrl" >
+				<div ><input type="checkbox" ng-init="resultCtrl.checkBookmark(result)" ng-model="resultCtrl.bookmark" ng-change="resultCtrl.toggleBookmark(result)" ng-mouseenter="resultCtrl.checkBookmark(result)"><span class="title">{{result.title}}</span></div>
+				<div class="url">{{result.uri}}</div>
 			</li>
 		</ul>
-	</div>
-	<div ng-show="active==1" >
-		<h3>Current Intent</h3>
-		<svg width="200" height="200">
-			<g transform='translate(100,100)'>
-				<circle cx="0" cy="0" r="30" stroke="grey" fill="none"></circle>
-				<circle cx="0" cy="0" r="60" stroke="grey" fill="none"></circle>
-				<circle cx="0" cy="0" r="90" stroke="grey" fill="none"></circle>
-			
-				<text ng-repeat="keyword in keywords" ng-controller="intentViewController" ng-init="getPosition(keyword)"  ng-attr-x="{{x}}" ng-attr-y="{{y}}" font-family="sans-serif" font-size="20px" fill="black">{{keyword.term}}</text>
-			</g>
-			
-		</svg>
+		<div style="text-align:center"><button  ng-click="searchCtrl.previousPage()" ng-show="searchCtrl.bof()==false">&lt;</button>
+		<button  ng-click="searchCtrl.nextPage()" ng-show="searchCtrl.eof==false">&gt;</button></div>
+
 	</div>
 
-</div>
+<!-- tab view for bookmarks and intent viewer-->
+	<div ng-controller="TabController as tab">
 
-<div>
-	<label><input type="radio"  value="both" ng-model="result_type">Both </label>
-	<label><input type="radio" ng-model="result_type" value="new">New resuts only</label>
-	<label><input type="radio" ng-model="result_type" value="old">Local results only</label>
-</div>
+		<div>
+			<button ng-click="tab.setTab(0)" ng-class="{activeTab : tab.active==0}">Bookmarks</button>
+			<button ng-click="tab.setTab(1)" ng-class="{activeTab : tab.active==1}">Keywords</button>
+			<button ng-click="tab.setTab(-1)" ng-hide="tab.active==-1">Hide</button>
+		</div>
 
-<div class="fillRest"  >
+		<div ng-show="tab.active==0" ng-controller="bookmarksController as bmCtrl">
+			<h2>bookmarks</h2>
+			<ul>
+				<li ng-repeat="item in bmCtrl.items" ng-controller="bookmarkItemController as bmitemCtrl"  >
+					<div><button ng-click="bmitemCtrl.removeItem(item)">Remove </button><span class="title">{{item.title}}</span></div>
+					<div class="url">{{item.uri}}</div>
+				</li>
+			</ul>
+		</div>
+		<div ng-show="tab.active==1" >
+			<h3>Current Intent</h3>
+			<svg width="200" height="200">
+				<g transform='translate(100,100)'>
+					<circle cx="0" cy="0" r="30" stroke="grey" fill="none"></circle>
+					<circle cx="0" cy="0" r="60" stroke="grey" fill="none"></circle>
+					<circle cx="0" cy="0" r="90" stroke="grey" fill="none"></circle>
 
-	
-	<ul>
-		<li ng-repeat="result in results" ng-controller="resultItemController" >
-			<div ><input type="checkbox" ng-init="checkBookmark(result)" ng-model="bookmark" ng-change="toggleBookmark(result)" ng-mouseenter="checkBookmark(result)"><span class="title">{{result.title}}</span></div>
-			<div class="url">{{result.uri}}</div>
-		</li>
-	</ul>
-	<div style="text-align:center"><button  ng-click="previousPage()" ng-hide="bof()">&lt;</button>
-	<button  ng-click="nextPage()" ng-hide="eof">&gt;</button></div>
-	
+					<text ng-repeat="keyword in searchCtrl.keywords" ng-controller="intentViewController as intentview" ng-init="intentview.getPosition(keyword)"  ng-attr-x="{{intentview.x}}" ng-attr-y="{{intentview.y}}" font-family="sans-serif" font-size="20px" fill="black">{{keyword.term}}</text>
+				</g>
+
+			</svg>
+		</div>
+
+	</div>
+
 </div>
