@@ -2,8 +2,8 @@
 <div>
 	<form>
 		<input type="search" ng-model="query" placeholder="Enter your query here">
-		<button ng-click="search('query')" class="btn btn-info btn-lg">
-		<span class="glyphicon glyphicon-search"></span> Search</button>
+		<button ng-click="search('query')" class="btn btn-info">
+		<span class="glyphicon glyphicon-search"></span></button>
 	</form>
 </div>
 <div ng-controller="TabController">
@@ -23,14 +23,23 @@
 			</li>
 		</ul>
 	</div>
-	<div ng-show="active==1">
+	<div ng-show="active==1" >
 		<h3>Current Intent</h3>
+		<svg width="200" height="200">
+			<g transform='translate(100,100)'>
+				<circle cx="0" cy="0" r="30" stroke="grey" fill="none"></circle>
+				<circle cx="0" cy="0" r="60" stroke="grey" fill="none"></circle>
+				<circle cx="0" cy="0" r="90" stroke="grey" fill="none"></circle>
+			
+				<text ng-repeat="keyword in keywords" ng-controller="intentViewController" ng-init="getPosition(keyword)"  ng-attr-x="{{x}}" ng-attr-y="{{y}}" font-family="sans-serif" font-size="20px" fill="black">{{keyword.term}}</text>
+			</g>
+			
+		</svg>
 	</div>
 
 </div>
 
 <div>
-<p>page {{currentPage}} </p>
 	<label><input type="radio"  value="both" ng-model="result_type">Both </label>
 	<label><input type="radio" ng-model="result_type" value="new">New resuts only</label>
 	<label><input type="radio" ng-model="result_type" value="old">Local results only</label>
@@ -38,12 +47,14 @@
 
 <div class="fillRest"  >
 
-	<button  ng-click="previousPage()" ng-hide="bof()">Previous page</button>
+	
 	<ul>
 		<li ng-repeat="result in results" ng-controller="resultItemController" >
 			<div ><input type="checkbox" ng-init="checkBookmark(result)" ng-model="bookmark" ng-change="toggleBookmark(result)" ng-mouseenter="checkBookmark(result)"><span class="title">{{result.title}}</span></div>
 			<div class="url">{{result.uri}}</div>
 		</li>
 	</ul>
-	<button  ng-click="nextPage()" ng-hide="eof">next page</button>
+	<div style="text-align:center"><button  ng-click="previousPage()" ng-hide="bof()">&lt;</button>
+	<button  ng-click="nextPage()" ng-hide="eof">&gt;</button></div>
+	
 </div>

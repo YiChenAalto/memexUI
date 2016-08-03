@@ -2,42 +2,50 @@
 <div id="intentPanel" ng-controller="intentListController" class="flexContainer verticalFlex"  ng-init="getIntent()">
 	<div class="panelHeader">Your past topics 
 		<button ng-click="updateIntent()">refresh</button>
+		<button ng-click="clearSelection()">clear colors</button>
 	</div>
 	<span>{{alertMessage}}</span>
 	<div class="fillRest" >
-		<ul>
-			<li ng-repeat="intenti in intents" ng-controller="intentController" ng-init="initCtrl(intenti)">
-				<div style="{{backgroundCode}}{{borderCode}}">
+		<ul id="intentList">
+			<li ng-repeat="intenti in intents" ng-controller="intentController" ng-init="initCtrl(intenti)" ng-click="toggleDetail()" >
+				<div style="{{backgroundCode}}{{borderCode}}" >
 				<button tag-button ng-repeat="item in facets" ng-controller="intentElementController" style="{{getStyle(item.weight)}}" popover-item popover-content={{popoverContent(item)}} >{{getContent(item,20)}} </button>
 				</div>
-				<div><button ng-click="setTempColor()">Highlight</button></div>
+				<div ng-hide="isFolded">
+					<button ng-click="setTempColor()"><span class="glyphicon glyphicon-tint"></span> Show on timeline</button>
+					<button ng-click="togglePositiveRelevance()"><span class="glyphicon glyphicon-star"></span> This is Relevant</button>
+				</div>
 			</li>
 		</ul>
 	</div>
 </div>
 
 <div ng-controller="timelineController" id="overviewTimeline">
-	<button ng-click="zoomin()" ng-show="EnableZoomIn"><span class="glyphicon glyphicon-zoom-in"> Zoom In</span></button>
-	<button ng-click="zoomout()" ng-show="EnableZoomOut"><span class="glyphicon glyphicon-zoom-out"> Zoom Out</span></button>
-	<button ng-click="clearTimeline()">clear</button>
+	<div>
+		<button ng-click="zoomin()"  ><span class="glyphicon glyphicon-zoom-in"> </span></button>
+		<button ng-click="zoomout()" ><span class="glyphicon glyphicon-zoom-out"></span></button>
+		
+	</div>
+	
 	<timeline-plot data="events" timeline-range="zoomRange" brush-range="brushRange" fill-scheme="intentColors" stroke-scheme="itemColors"></timeline-plot>
 	
 </div>
 
-<div id="detailTimeline" ng-controller="eventListController" class="flexContainer verticalFlex">
-	<div >{{timeRange.end}}</div>
-	<div class="fillRest">
-		<div ng-hide="dataLoaded" class="placeHolder">No events loaded</div>
-		<ul >
-			<li><button>Later Events</button></li>
+<div id="detailTimeline" ng-controller="eventListController as eventlist" class="flexContainer verticalFlex">
+	<div><span class="labelText" style="border-bottom: 1px solid rgba(119,119,119,0.3)">{{timeRange.end}}</span></div>
+	<div class="fillRest" style="border-left: 1px solid rgba(119,119,119,0.3)" scroll-list>
+		<div ng-hide="dataLoaded" class="vertical_center">No events loaded</div>
+		<ul ng-show="dataLoaded">
+<!--			<li><button class="labelText">Later Events</button></li>-->
 			<li ng-repeat="eventi in events" ng-mouseenter="applyFishEye($index)" ng-mouseleave="removeFishEye($index)"  zoomable-li data="eventi">
-				<div ng-controller="eventItemController">
-				<div class="eventIcon" ng-include></div>
-				<button popover-item popover-content="event">{{eventi.title}}</button>
+				<div ng-controller="eventItemController" ng-init="initEvent(eventi)" ng-mouseenter="toggleToolTip(eventi)" ng-mouseleave="toggleToolTip(eventi)">
+					<button ng-repeat="intent in coloredIntents" style="{{getIntentIconStyle(intent)}}"></button>
+					<button popover-item popover-content="<div class='.placeHolder'>Loading event details...</div>">{{eventi.title}}</button><div class="eventIcon" ng-include></div>
 				</div>
 			</li>
-			<li><button>Earlier Events</button></li>
+<!--			<li><button class="labelText">Earlier Events</button></li>-->
 		</ul>
 	</div>
-	<div >{{timeRange.start}}</div>
+	<div><span class="labelText" style="border-top: 1px solid rgba(119,119,119,0.3)">{{timeRange.start}}</span></div>
+	<div id="timelineToolTip" ng-show="tooltip.visible" style="top:{{tooltip.y}}px">{{tooltip.label}} <span class="glyphicon glyphicon-play"></span></div>
 </div>

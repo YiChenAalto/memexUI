@@ -14,7 +14,7 @@ mapp.factory('memexData', function($http){
 	dummyFactory.endTime=new Date();
 	dummyFactory.beginTime=new Date();//will be changed after initial fetch
 	/////////some constances
-	
+	var maxEventsNumber=30;
 	var itemColors=["#e41a1c","#377eb8","#4daf4a"];//for selected documents or tags
     
 	var intentColors=[//for intent 
@@ -48,20 +48,11 @@ mapp.factory('memexData', function($http){
 				//when real backend is ready, the following should be replaced with:dummyFactory.intents=database.intents
 				dummyFactory.intents=database.intents.slice(0,Math.min(15,database.intents.length));
 				
+				initColors(true);
+				
+				//intially get events associated with colored intents
 				dummyFactory.fetchTimelineEvents();
-				
-				
-				var coloredInt=database.coloredIntents;
-				//intiate coloredIntents.
-				for (var i=0;i<intentColors.length;i++){
-					dummyFactory.coloredIntents[i]=-1;
-				}
-				//fill in the coloured intents if PIM tool is used to assign colors to intents
-				for (var i=0;i<coloredInt.length;i++){
-					var ci=intentColors.indexOf(coloredInt[i].colorCode);
-					if(ci>0)dummyFactory.coloredIntents[ci]=coloredInt[i].intentId;
-				}
-				
+								
 			}
 		);
 		
@@ -79,71 +70,287 @@ mapp.factory('memexData', function($http){
 		dummyFactory.intents=database.intents.slice(0,Math.min(15,database.intents.length));
 		}
 	}
-	dummyFactory.fetchTimelineEvents=function(criteria){
+	dummyFactory.getTimelineEventsInRange=function(timerange){
+		var el=database["events"].filter(function(e){
+			return e.start>=timerange[0] && e.start<=timerange[1];
+		})
+		return fetchTimelineEvents(el);
+	}
+	dummyFactory.fetchTimelineEvents=function(){
 		//TODO: this function fetches events for timeline circles, then update the weight of events on detailed timeline
-		//new events fetched ....
+		dummyFactory.oEvents=fetchTimelineEvents(database["events"]);			
+	}
+	
+	function fetchTimelineEvents(el){
 		//temporary code below select 30 items with heighted weight:
-		if (database["events"]){
-		var el=database.events;
-		el.sort(function(a,b){return (b.weight+b.relevance+Math.random())-(a.weight+a.relevance+Math.random())});
-		dummyFactory.oEvents=el.slice(0,Math.min(30,el.length));
+		if (el){
+			var el=database.events;
+			//1. get items matches criteria 
+			//dummy version: we only get evnets for selected intents
+			var colorEv=el.filter(function(e){
+				return dummyFactory.coloredIntents.indexOf(e.intent)>=0
+			});
+			//apply the color code to these events
+		for (var i=0;i<colorEv.length;i++){
+			var ci=dummyFactory.coloredIntents.indexOf(colorEv[i].intent);
+			colorEv[i]["intentColor"]=dummyFactory.intentColors[ci];
+			
+			}
+			//2. if there are space left, get more items according to weight
+			var spaceLeft=maxEventsNumber-colorEv.length;
+			var el1=el.filter(function(e){return dummyFactory.coloredIntents.indexOf(e.intent)<0});
+			
+			el1.sort(function(a,b){return (b.weight+b.relevance+Math.random())-(a.weight+a.relevance+Math.random())});
+			
+			
+			return colorEv.concat(el1.slice(0,Math.min(spaceLeft,el1.length)));
 		}
+		else{
+			return [];
+		}
+	}
+	function fetchMoreEvents(fromTime,number){
+		//number<0, earlier than from time
+		
+		var more_events=[];
+		if (number>0){
+			//number >0, later than fromtime
+			 more_events=database.events.filter(function(e){return e.start>fromTime});
+			//sort by time ascending
+			more_events.sort(sortAscTime);
+		}
+		else{
+			 more_events=database.events.filter(function(e){return e.start<fromTime});
+			//sort by time descending
+			more_events.sort(sortDscTime);
+		}
+		more_events=more_events.slice(0,Math.min(more_events.length,Math.abs(number)));
+		return more_events;
+			
+	}
+	function sortDscTime(a,b){
+		return b.start-a.start;
+	}
+	function sortAscTime(a,b){
+		return a.start-b.start;
 	}
 	dummyFactory.fetchEvents=function(){
 		//fetch events according to selected time range
 		//otherwise, by default,get the 
 		//temporary code below get the top 50 events 
 		if (database["events"]){
-		var el=database.events;
-		el=el.filter(function(e){return e.start>=dummyFactory.focusedTimeRange.start && e.start<=dummyFactory.focusedTimeRange.end});
-		dummyFactory.dEvents=el.sort(function(a,b){return b.start-a.start});
+			var el=database.events;
+			//get items in selected range
+			el=el.filter(function(e){return e.start>=dummyFactory.focusedTimeRange.start && e.start<=dummyFactory.focusedTimeRange.end});
+			
+			//if there are less than a page of event, load more
+			var spaceLeft=maxEventsNumber-el.length;
+			if(spaceLeft>0){
+				var moreEvs= fetchMoreEvents(dummyFactory.focusedTimeRange.start,-spaceLeft); //load more earlier events
+				el=el.concat(moreEvs);
+				
+				spaceLeft=maxEventsNumber-el.length;
+				if(spaceLeft>0){
+					//get more event later than end point
+					moreEvs= fetchMoreEvents(dummyFactory.focusedTimeRange.end,spaceLeft);
+					if(moreEvs.length>0){
+						el=el.concat(moreEvs);
+						
+					}
+				}
+				el.sort(sortDscTime);
+				if(el.length>0){
+					//update focusedTimeRange
+					dummyFactory.focusedTimeRange.start=el[el.length-1].start;
+					dummyFactory.focusedTimeRange.end= el[0].start;
+				}
+				
+			}
+			else{
+				el.sort(sortDscTime);
+				el=el.slice(0,maxEventsNumber);
+			}
+			
+			
+			
+			//apply colors to events
+			//with probility models, an event may belong to multiple intents, each with a different probability. So for each colored intent, it should ask the server to return all event' s probability.
+			//initiate "coloredIntents" attr for each event
+			for (var j=0;j<el.length;j++){
+				el["coloredIntents"]=[];
+			}
+			for (var i=0; i<dummyFactory.colorScheme.length;i++){
+				
+				var cs=dummyFactory.colorScheme[i];
+				if( cs["ftype"]=="intent"){
+					var sublist=el.filter(function(){return el["intent"]==cs['id'];})
+					for (var j=0;j<sublist.length;j++){
+						var pcx=Math.random();
+						sublist[j]["coloredIntents"].push({intent:cs['id'],color:cs['color'], r:pcx});
+					}
+				}
+				else{
+					//ftype=="doc" or term
+				}
+				
+			}
+			
+			dummyFactory.dEvents=el;
 		}
 	}
 	
-	dummyFactory.setTempColor=function(intentid){
+	dummyFactory.setItemColor=function(docid){
 		//var doUpdate=true;
 		var border="";//by default, if no color is available to assign to it 
+		var i=dummyFactory.coloredItems.indexOf(docid);
+		if(i<0){
+			//intent does not have a temp color, then apply color		
+		// check if there are still color code left, assign it a color code
+			if (dummyFactory.coloredItems.indexOf(-1)<0){
+				if (dummyFactory.coloredItems.length<itemColors.length){
+					//register it in coloredItems list
+					dummyFactory.coloredItems.push(docid);
+					border=itemColors[dummyFactory.coloredItems.length-1];
+				}
+				else{
+					//border="";
+					dummyFactory.info="You can only select up to "+itemColors.length+" items";
+				}
+			}
+			else{//find an space where an intent has been removed from coloredItems array
+				var blankIndex=dummyFactory.coloredItems.indexOf(-1);
+				//register it in coloredItems list
+				dummyFactory.coloredItems[blankIndex]=obj.docid;
+				border=itemColors[blankIndex];
+			}
+			
+		}
+		else{
+			//remove docid from the coloredIntets list
+			dummyFactory.coloredItems[i]=-1;//assign an invalid id to hold the place
+			//border="";
+		}	
+		return border;
+	}
+	
+	dummyFactory.setIntentColor=function(intentid,saveSetting){
+		var bcolor="";//by default, if no color is available to assign to it 
 		var i=dummyFactory.coloredIntents.indexOf(intentid);
 		if(i<0){
 			//intent does not have a temp color, then apply color		
 		// check if there are still color code left, assign it a color code
 			if (dummyFactory.coloredIntents.indexOf(-1)<0){
+				//if there are not cancelled codes, try to push it to a new 
 				if (dummyFactory.coloredIntents.length<intentColors.length){
 					//register it in coloredIntents list
 					dummyFactory.coloredIntents.push(intentid);
-					border=intentColors[dummyFactory.coloredIntents.length-1];
+					bcolor=intentColors[dummyFactory.coloredIntents.length-1];
+					if(saveSetting){
+					//save this to databse
+					}
 				}
 				else{
-					//border="";
-					dummyFactory.info="You can only select up to "+intentColors.length+" intents";
+					//bcolor="";
+					dummyFactory.info="You can only select up to "+intentColors.length+" items";
 				}
 			}
 			else{//find an space where an intent has been removed from coloredIntents array
 				var blankIndex=dummyFactory.coloredIntents.indexOf(-1);
 				//register it in coloredIntents list
-				dummyFactory.coloredIntents[blankIndex]=obj.intentid;
-				border=intentColors[blankIndex];
+				dummyFactory.coloredIntents[blankIndex]=intentid;
+				bcolor=intentColors[blankIndex];
+				if(saveSetting){
+				//save this to databse
+				}
 			}
 			
 		}
 		else{
 			//remove intentid from the coloredIntets list
 			dummyFactory.coloredIntents[i]=-1;//assign an invalid id to hold the place
-			//border="";
-		}	
-		return border;
+			//updateColorScheme
+			var schemeIndex= getIndexByField(dummyFactory.colorScheme,"color",intentColors[i]);
+			if (schemeIndex>=0)
+			dummyFactory.colorScheme.splice(schemeIndex,1);
+			
+			if(saveSetting){
+				//TODO:save this to databse
+			}
+			
+		}
+		if(bcolor.length==7){
+			//add it to colorscheme
+			var newscheme={ftype:"intent"};
+			newscheme["color"]=bcolor;
+			newscheme["id"]=intentid;
+			dummyFactory.colorScheme.push(newscheme);
+		}
+		
+		dummyFactory.fetchEvents();
+		dummyFactory.fetchTimelineEvents();
+		
+		return bcolor;
 	}
 	dummyFactory.getIntentColor=function(intentid){
 		if (dummyFactory.intentColors.indexOf(intentid)<0){
 			return "";
 		}
 		else{
-			return itemColors[dummyFactory.intentColors.indexOf(intentid)];
+			return intentColors[dummyFactory.intentColors.indexOf(intentid)];
 		}
 	}
 	
-
+	dummyFactory.clearTempColors=function(){
+		//intiate coloredIntents.
+		initColors(false);
+				
+	}
 	
+	dummyFactory.colorScheme=[];//stores temp color assignments to intent and selected information elements.
+	dummyFactory.focusedEventIndex=-1;
+	
+	dummyFactory.toggleFocusedEvent=function(eventi){
+		var eventindex=getIndexByField(database.events,"id",eventi.id);
+		if(eventindex>=0){
+			if (database.events[eventindex].hasOwnProperty("focused")){
+				delete database.events[eventindex].focused;
+			}
+			database.events[eventindex]["focused"]=true;
+		}
+	}
+	
+	function initColors(includeFolderColors){
+		dummyFactory.colorScheme=[];
+		for (var i=0;i<intentColors.length;i++){
+			dummyFactory.coloredIntents[i]=-1;
+		}
+		for (var i=0;i<itemColors.length;i++){
+			dummyFactory.coloredItems[i]=-1;
+		}
+		if(includeFolderColors){
+			//folder colors are preset colors through PIM tool
+			//fill in the coloured intents if PIM tool is used to assign colors to intents
+			var coloredInt=database.coloredIntents;
+			for (var i=0;i<coloredInt.length;i++){
+				var ci=intentColors.indexOf(coloredInt[i].colorCode);
+				if(ci>0){
+					dummyFactory.coloredIntents[ci]=coloredInt[i].intentId;
+					var scheme={ftype:"intent"};
+					scheme["id"]=coloredInt[i].intentId;
+					scheme["color"]=coloredInt[i].colorCode;
+					dummyFactory.colorScheme.push(scheme);
+				}	
+			}
+		}
+		//remove all code attr from events
+		for (var i=0;i<database.events.length;i++){
+			if(database.events[i].hasOwnProperty("intentColor")){
+				delete database.events[i].intentColor;
+				delete database.events[i].coloredIntents;
+			}
+		}
+				
+	}
 	
 	//////////////the following functions are only for creating a fake dataset///////////////
 	function createDummyDataSet(rawData){
@@ -165,6 +372,8 @@ mapp.factory('memexData', function($http){
 			var intentid=Math.round(Math.random()*20);
 			obj.intent=intentid;
 			obj.start=this.start;
+			obj.id=this.id;
+			//obj.feedbackEvents=this.feedbackEvents;
 			//compare with earliest date
 			if(obj.start<beginDate){
 				beginDate=obj.start;
@@ -255,8 +464,7 @@ mapp.factory('memexData', function($http){
 				doc["title"]=doctitle;
 				doc["weight"]=Math.random();
 				doc["uri"]=doci.uri;
-				intenti.docs.push(doc);
-				
+				intenti.docs.push(doc);	
 			}
 			else{//update doc weight.
 				intenti.docs[docIndex].weight+=1;

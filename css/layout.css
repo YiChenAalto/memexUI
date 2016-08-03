@@ -90,3 +90,8 @@
 	-ms-flex: 1;
 	overflow: auto;
 }
+.vertical_center {
+   position: relative;
+	top: 50%;
+	transform: translateY(50%);
+}

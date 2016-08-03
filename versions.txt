@@ -16,6 +16,13 @@ version1.0.2:
 	c.when moving to the end, should evalute the selection, extend the timelien range is it is still within its max range (detaul full range).
 	
 
+
+
+-----------To be done------------------
+zooom in out seems to update the original data, instead of the temporary ones.
+
+V1.0.3
+
 4. Assign color code to each individual events, which will affect the colors of events on both overview timeline and eventlist
 	i) for events on detail timeline, multiple colour codes can be assigned, with opacity to dicate p(c|x);
 	ii) for events on overview timeline, each event can only have 1 fill color and 1 stroke color. 
@@ -25,5 +32,8 @@ version1.0.2:
 			 when and intent is removed from selection, system is iterate through all events to remove its corresponding color code. 
 		 b. when a document or tag is selected, events associated with this information element will be assigned with another attribute, e.g dcode
 
-5.add filter function to memex intents, events. Allow filter by selected terms, documents in intent presentation. 
+-----------to do-----------
+5. mutual event find when hovering items on d3 timeline, it find events in event list. 
+
+6.add filter function to memex intents, events. Allow filter by selected terms, documents in intent presentation. 
 		

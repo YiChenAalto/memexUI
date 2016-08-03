@@ -14,9 +14,11 @@ sapp.controller('TabController', function($scope){
 
 sapp.controller('searchController', ['$scope','searchEngine',function ($scope, searchEngine){
 	//define and initiate some variables
+	$scope.keywords=[{term:"infom",weight:0.3},{term:"search",weight:0.6},{term:"teach",weight:1}];
+	
 	$scope.currentPage=0;//result page: first page=1
-	$scope.resultsPerPage=3;
-	$scope.eof=false;//end of list
+	$scope.resultsPerPage=7;
+	$scope.eof=true;//end of list
 	$scope.bof=function(){
 		return $scope.currentPage<=1;
 	};//beginning of list
@@ -59,6 +61,22 @@ sapp.controller('searchController', ['$scope','searchEngine',function ($scope, s
 	}
 	$scope.result_type="both";
 }]);
+sapp.controller('intentViewController',function($scope){
+	
+	$scope.x=0;
+	$scope.y=0;
+	$scope.getPosition=function(item){
+		var r=100*item.weight;
+		var agl=Math.random()*2 * Math.PI;
+		
+		var x=Math.round(r*Math.cos(agl));
+		var y=Math.round(r*Math.sin(agl));
+		console.log("ang:"+agl+",x:"+x+",y:"+y);
+		$scope.x=x;
+		$scope.y=y;
+	}
+});
+
 
 
 sapp.controller('resultItemController',['$scope','bookmarks', function($scope, bookmarks){
